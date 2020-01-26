@@ -1,12 +1,10 @@
 const { connect, copy } = Deno
 
 //string = +MESSAGE\r\n
-const encode = (message: string) => {
-
-    const testCommand = `set name guro\r\n`;
+const encode = (content: string) => {
 
     const encoder = new TextEncoder();
-    const encoded = encoder.encode(testCommand);
+    const encoded = encoder.encode(content);
     return encoded;
 }
 
@@ -19,34 +17,39 @@ const decode = (buffer: Uint8Array) => {
 }
 
 
-const receiveStuff = async (connection) => {
-
-    const buffer = new Uint8Array(100);
-    const content = await connection.read(buffer);
-
-    const decoded = decode(buffer);
-
-
-    console.log("receiveStuff: ", content);
-}
-
-const sendCommand = async (connection, command) => {
+const send = async (connection, command) => {
 
     const encoded = encode(command);
-    const something = await connection.write(encoded);
+    const response = await connection.write(encoded);
 
-    console.log("sender: ", something);
+    console.log("sender: ", response);
+}
+
+const set = (connection, key: string, value: string) => {
+
+    const command = `set ${key} ${value}\r\n`;
+    send(connection, command);
+}
+
+const get = (connection, key: string) => {
+
+    //TODO: implement
+    throw "get is not implemented";
 }
 
 
 
-const redisServer = async () => {
 
-    const connection = await connect({port: 6379, transport: "tcp"});
+const Redis = async (port: number) => {
 
-    receiveStuff(connection);
-    sendCommand(connection, "set name guro");
+    const connection = await connect({port, transport: "tcp"});
 
-}
+    return {
+        set: (key: string, value: string) => set(connection, key, value),
+        get: (key: string) => get(connection, key)
+    };
+};
 
-redisServer();
+
+const redis = await Redis(6379);
+redis.set("name", "elon");
