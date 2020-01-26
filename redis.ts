@@ -17,29 +17,65 @@ const decode = (buffer: Uint8Array) => {
     return decoded;
 }
 
+const getLine = async (reader) => {
+
+    const result = await reader.readLine()
+    const line = (result as ReadLineResult).line
+    return decode(line);
+}
+
+const parserFromPrefix = (prefix: string) => {
+
+    if (prefix === "+") {
+
+        return async (reader: BufReader) => {
+
+            const line = await getLine(reader);
+            return line;
+        }
+    }
+
+    if (prefix === "$") {
+
+        return async (reader: BufReader) => {
+
+            reader.readLine();
+            const relevant = (await reader.readLine()) as ReadLineResult;
+            return decode(relevant.line);
+        }
+    }
+
+    throw "A parser for this prefix is not implemented..";
+}
+
+const getResponse = async (connection) => {
+
+    const reader = new BufReader(connection);
+    const first = await reader.peek(1);
+    if (first === EOF) throw "unexpected EOF while parsing";
+
+    const prefix = decode(first as Uint8Array);
+    const parse = await parserFromPrefix(prefix);
+
+    const response = await parse(reader);
+    return response;
+}
 
 const send = async (connection, command) => {
 
+    console.log("sending command: ", command);
     const encoded = encode(`${command}\r\n`);
     await connection.write(encoded);
 
-    const reader = new BufReader(connection);
-    const firstByte = await reader.peek(1);
-
-    if (firstByte == EOF) throw "EOF as response";
-    const line = ((await reader.readLine()) as ReadLineResult).line
-    const response = decode(line);
-
-    console.log("with command: ", command);
-    console.log("returning response: ", response);
-
+    const response = await getResponse(connection);
     return response; //TODO: refactort his function
 }
 
 const set = async (connection, key: string, value: string) => {
 
     const command = `set ${key} ${value}`;
-    send(connection, command);
+    const response = await send(connection, command);
+    return response;
 }
 
 const get = async (connection, key: string) => {
@@ -64,5 +100,9 @@ const Redis = async (port: number) => {
 
 
 const redis = await Redis(6379);
-const name = await redis.get("name");
-console.log(name);
+
+
+await redis.set("name", "guro");
+const first = await redis.get("name");
+
+console.log("first", first);
