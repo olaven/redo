@@ -1,52 +1,8 @@
-import { BufReader, ReadLineResult } from "https://deno.land/std/io/bufio.ts"
+import { BufReader } from "https://deno.land/std/io/bufio.ts"
 const { connect, copy, EOF } = Deno
-
-//string = +MESSAGE\r\n
-const encode = (content: string) => {
-
-    const encoder = new TextEncoder();
-    const encoded = encoder.encode(content);
-    return encoded;
-}
+import { encode, decode, parserFactory } from "./parser.ts"
 
 
-const decode = (buffer: Uint8Array) => {
-
-    const decoder = new TextDecoder("utf-8");
-    const decoded = decoder.decode(buffer);
-    return decoded;
-}
-
-const getLine = async (reader) => {
-
-    const result = await reader.readLine()
-    const line = (result as ReadLineResult).line
-    return decode(line);
-}
-
-const parserFromPrefix = (prefix: string) => {
-
-    if (prefix === "+") {
-
-        return async (reader: BufReader) => {
-
-            const line = await getLine(reader);
-            return line;
-        }
-    }
-
-    if (prefix === "$") {
-
-        return async (reader: BufReader) => {
-
-            reader.readLine();
-            const relevant = (await reader.readLine()) as ReadLineResult;
-            return decode(relevant.line);
-        }
-    }
-
-    throw "A parser for this prefix is not implemented..";
-}
 
 const getResponse = async (connection) => {
 
@@ -55,7 +11,7 @@ const getResponse = async (connection) => {
     if (first === EOF) throw "unexpected EOF while parsing";
 
     const prefix = decode(first as Uint8Array);
-    const parse = await parserFromPrefix(prefix);
+    const parse = await parserFactory(prefix);
 
     const response = await parse(reader);
     return response;
@@ -63,12 +19,11 @@ const getResponse = async (connection) => {
 
 const send = async (connection, command) => {
 
-    console.log("sending command: ", command);
     const encoded = encode(`${command}\r\n`);
     await connection.write(encoded);
 
     const response = await getResponse(connection);
-    return response; //TODO: refactort his function
+    return response;
 }
 
 const set = async (connection, key: string, value: string) => {
@@ -85,7 +40,10 @@ const get = async (connection, key: string) => {
     return response;
 }
 
+const increment = (connection, key: string) => {
 
+    const command = `incr ${key}`;
+}
 
 
 const Redis = async (port: number) => {
@@ -93,16 +51,19 @@ const Redis = async (port: number) => {
     const connection = await connect({port, transport: "tcp"});
 
     return {
-        set: (key: string, value: string) => set(connection, key, value),
-        get: (key: string) => get(connection, key)
+        set: (key: string, value: string) => send(connection, `set ${key} ${value}`),
+        get: (key: string) => send(connection, `get ${key}`),
+        increment: (key: string) => send(connection, `incr ${key}`),
     };
 };
 
 
 const redis = await Redis(6379);
 
+await redis.set("value", "0");
+const before = await redis.get("value");
+await redis.increment("value");
+await redis.increment("value");
+const after = await redis.get("value");
 
-await redis.set("name", "guro");
-const first = await redis.get("name");
-
-console.log("first", first);
+console.log("before:", before, "after:", after);
