@@ -1,21 +1,6 @@
+import { encode } from "https://deno.land/std/strings/encode.ts";
+import { decode } from "https://deno.land/std/strings/decode.ts";
 import { BufReader, ReadLineResult } from "https://deno.land/std/io/bufio.ts"
-
-//string = +MESSAGE\r\n
-export const encode = (content: string) => {
-
-    const encoder = new TextEncoder();
-    const encoded = encoder.encode(content);
-    return encoded;
-}
-
-//TODO: are equivalent functions in standard library?
-export const decode = (buffer: Uint8Array) => {
-
-    const decoder = new TextDecoder("utf-8");
-    const decoded = decoder.decode(buffer);
-    return decoded;
-}
-
 
 const readCurrentLine = async (reader: BufReader) => {
 

@@ -1,7 +1,8 @@
-import { BufReader } from "https://deno.land/std/io/bufio.ts"
+import { encode } from "https://deno.land/std/strings/encode.ts";
+import { decode } from "https://deno.land/std/strings/decode.ts";
+import { BufReader } from "https://deno.land/std/io/bufio.ts";
 const { connect, copy, EOF } = Deno
-import { encode, decode, parserFactory } from "./parser.ts"
-
+import { parserFactory } from "./parser.ts"
 
 
 const getResponse = async (connection) => {
@@ -62,7 +63,6 @@ const redis = await Redis(6379);
 
 await redis.set("value", "0");
 const before = await redis.get("value");
-await redis.increment("value");
 await redis.increment("value");
 const after = await redis.get("value");
 
