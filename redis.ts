@@ -27,26 +27,6 @@ const send = async (connection, command) => {
     return response;
 }
 
-const set = async (connection, key: string, value: string) => {
-
-    const command = `set ${key} ${value}`;
-    const response = await send(connection, command);
-    return response;
-}
-
-const get = async (connection, key: string) => {
-
-    const command = `get ${key}`;
-    const response = await send(connection, command);
-    return response;
-}
-
-const increment = (connection, key: string) => {
-
-    const command = `incr ${key}`;
-}
-
-
 const Redis = async (port: number) => {
 
     const connection = await connect({port, transport: "tcp"});
