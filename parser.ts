@@ -1,6 +1,7 @@
-import { encode } from "https://deno.land/std/strings/encode.ts";
-import { decode } from "https://deno.land/std/strings/decode.ts";
-import { BufReader, ReadLineResult } from "https://deno.land/std/io/bufio.ts"
+import {
+    encode, decode,
+    BufReader, ReadLineResult
+} from "./deps.ts";
 
 const readCurrentLine = async (reader: BufReader) => {
 
