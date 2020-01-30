@@ -11,6 +11,7 @@ const getResponse = async (connection) => {
 
     const reader = new BufReader(connection);
     const first = await reader.peek(1);
+
     if (first === EOF) throw "unexpected EOF while parsing";
 
     const prefix = decode(first as Uint8Array);
@@ -29,23 +30,17 @@ const send = async (connection, command) => {
     return response;
 }
 
-const Redis = async (port: number) => {
+export const Redis = async (port: number) => {
 
     const connection = await connect({port, transport: "tcp"});
 
     return {
-        set: (key: string, value: string) => send(connection, `set ${key} ${value}`),
-        get: (key: string) => send(connection, `get ${key}`),
-        increment: (key: string) => send(connection, `incr ${key}`),
+        set: (key: string, value: string) => send(connection, `SET ${key} ${value}`),
+        get: (key: string) => send(connection, `GET ${key}`),
+        increment: (key: string) => send(connection, `INCR ${key}`),
+        delete: (key: string) => send(connection, `DEL ${key}`)
     };
 };
 
 
-const redis = await Redis(6379);
 
-await redis.set("value", "0");
-const before = await redis.get("value");
-await redis.increment("value");
-const after = await redis.get("value");
-
-console.log("before:", before, "after:", after);

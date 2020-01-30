@@ -8,7 +8,7 @@ const readCurrentLine = async (reader: BufReader) => {
     const result = (await reader.readLine()) as ReadLineResult;
     const encoded = result.line;
 
-    const line = decode(encoded);
+    const line = decode(encoded)
     return line;
 }
 
@@ -21,7 +21,9 @@ const stringParser = async (reader: BufReader) => {
 
 const bulkStringParser = async (reader: BufReader) => {
 
-    await reader.readLine();
+    const bytesIndicator = await readCurrentLine(reader);
+    if (bytesIndicator === "$-1") return null;
+
     return readCurrentLine(reader);
 }
 
@@ -33,7 +35,7 @@ const errorParser = async (reader: BufReader) => {
 const integerParser = async (reader: BufReader) => {
 
     const asString = await readCurrentLine(reader);
-    const integer = parseInt(asString);
+    const integer = parseInt(asString.substr(1));
     return integer;
 }
 
