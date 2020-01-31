@@ -13,7 +13,7 @@ const redis = await Redis(6379); //start with Docker or similar?
 
 test("clear redis store before other tests", async () => {
 
-    const keys = ["my_key", "first_value", "second_value", "my_num"];
+    const keys = ["my_key", "first_value", "second_value", "my_num", "my_array"];
     for await (let key of keys) {
 
         await redis.delete(key);
@@ -72,6 +72,22 @@ test("can delete", async () => {
 
     assert(before !== null);
     assert(after === null);
+});
+
+test("can store arrays", async () => {
+
+    const key = 'my_array';
+    const first = "first array value";
+    const second = "second array value";
+
+    await redis.array(key).append(first);
+    await redis.array(key).append(second);
+
+    const retrieved = await redis.array(key).get();
+
+    assert(retrieved.includes(first));
+    assert(retrieved.includes(second));
+    assertEquals(retrieved.length, 2);
 });
 
 runTests();
