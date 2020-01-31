@@ -2,6 +2,7 @@ import {
     encode, decode,
     BufReader, ReadLineResult
 } from "./deps.ts";
+const { EOF } = Deno
 
 const readCurrentLine = async (reader: BufReader) => {
 
@@ -39,6 +40,23 @@ const integerParser = async (reader: BufReader) => {
     return integer;
 }
 
+const arrayParser = async (reader: BufReader) => {
+
+    const firstLine = await readCurrentLine(reader);
+    const length = parseInt(firstLine.substr(1));
+
+    const array = [];
+    for (let i = 0; i < length; i++) {
+
+        // NOTE: each element has to be parsed, and may be of different types
+        const prefix = await getPrefix(reader);
+        const parsed = await parserFactory(prefix)(reader);
+        array.push(parsed);
+    }
+
+    return array;
+}
+
 export const parserFactory = (prefix: string) => {
 
     const parsers = {
@@ -46,10 +64,20 @@ export const parserFactory = (prefix: string) => {
         "-": errorParser,
         "$": bulkStringParser,
         ":": integerParser,
+        "*": arrayParser
     }
 
     const parser = parsers[prefix];
     if (!parser) throw "A parser for this prefis is not implemented";
 
     return parser;
+}
+
+export const getPrefix = async (reader: BufReader) => {
+
+    const first = await reader.peek(1);
+    if (first === EOF) throw "unexpected EOF while parsing";
+
+    const prefix = decode(first as Uint8Array);
+    return prefix
 }

@@ -77,17 +77,35 @@ test("can delete", async () => {
 test("can store arrays", async () => {
 
     const key = 'my_array';
-    const first = "first array value";
-    const second = "second array value";
+    const first = "first_array_value";
+    const second = "second_array_value";
 
     await redis.array(key).append(first);
     await redis.array(key).append(second);
 
     const retrieved = await redis.array(key).get();
 
-    assert(retrieved.includes(first));
-    assert(retrieved.includes(second));
+    assertEquals(true, retrieved.includes(first))
+    assertEquals(true, retrieved.includes(second))
     assertEquals(retrieved.length, 2);
 });
+
+test("can get specified range", async () => {
+
+    const key = 'my_array';
+    const n = 10;
+    const wanted = 5;
+
+    for (let i = 0; i < n; i++) {
+        await redis.array(key).append("value");
+    }
+
+    const retrieved = await redis.array(key).get(0, wanted - 1);
+    assertEquals(retrieved.length, wanted);
+
+    const all = await redis.array(key).get();
+    assert(all.length > wanted);
+});
+
 
 runTests();

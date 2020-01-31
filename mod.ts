@@ -4,17 +4,13 @@ import {
 } from "./deps.ts";
 
 const { connect, copy, EOF } = Deno
-import { parserFactory } from "./parser.ts"
+import { parserFactory, getPrefix } from "./parser.ts"
 
 
 const getResponse = async (connection) => {
 
     const reader = new BufReader(connection);
-    const first = await reader.peek(1);
-
-    if (first === EOF) throw "unexpected EOF while parsing";
-
-    const prefix = decode(first as Uint8Array);
+    const prefix = await getPrefix(reader);
     const parse = await parserFactory(prefix);
 
     const response = await parse(reader);
@@ -40,8 +36,8 @@ export const Redis = async (port: number) => {
         increment: (key: string) => send(connection, `INCR ${key}`),
         delete: (key: string) => send(connection, `DEL ${key}`),
         array: (key: string) => ({
-            get: (start: number = 0, end: number = -1) => send(connection, "lrange ${key} ${start} ${end}"),
-            append: (value) => send(connection, "rpush ${key} ${value}")
+            get: (start: number = 0, end: number = -1) => send(connection, `lrange ${key} ${start} ${end}`),
+            append: (value) => send(connection, `rpush ${key} ${value}`)
         })
     }
 };
