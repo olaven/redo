@@ -10,6 +10,7 @@ This library is by not suited for production use, in its current state.
 ## Documentation 
 ### Setup 
 ``` typescript
+import { Redis } from "https://raw.githubusercontent.com/olaven/redo/master/mod.ts"
 const redis = Redis(6379); //the port Redis is running on
 ```
 
