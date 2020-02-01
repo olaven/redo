@@ -36,11 +36,8 @@ export const Redis = async (port: number) => {
         increment: (key: string) => send(connection, `INCR ${key}`),
         delete: (key: string) => send(connection, `DEL ${key}`),
         array: (key: string) => ({
-            get: (start: number = 0, end: number = -1) => send(connection, `lrange ${key} ${start} ${end}`),
-            append: (value) => send(connection, `rpush ${key} ${value}`)
+            get: (start: number = 0, end: number = -1) => send(connection, `LRANGE ${key} ${start} ${end}`),
+            append: (value) => send(connection, `RPUSH ${key} ${value}`)
         })
     }
-};
-
-
-
+}
